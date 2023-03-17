@@ -33,7 +33,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost 1.75 REQUIRED COMPONENTS date_time regex)
 
 # Threadsライブラリを読み込みます
-set(LIBTORCH_DIR C:/Users/pon/Downloads/libtorch-win-shared-with-deps-debug-1.13.1+cu117/libtorch/)
+set(LIBTORCH_DIR C:/Users/pon/Downloads/libtorch-win-shared-with-deps-2.0.0+cu117/libtorch/)
 list(APPEND CMAKE_PREFIX_PATH ${LIBTORCH_DIR})
 find_package(Threads REQUIRED)
 find_package(Torch REQUIRED)

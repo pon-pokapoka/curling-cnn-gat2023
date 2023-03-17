@@ -198,11 +198,16 @@ void OnInit(
     if (torch::cuda::is_available()) {
         std::cout << "CUDA is available!" << std::endl;
         device = torch::kCUDA;
-    }   
+    }
+    else {
+        std::cout << "CUDA is not available." << std::endl;
+    }
     // Deserialize the ScriptModule from a file using torch::jit::load().
     try {
         // Deserialize the ScriptModule from a file using torch::jit::load().
-        module = torch::jit::load("model/traced_curling_cnn_gat2023.pt", device);
+        std::cout << "model loading..." << std::endl;
+        module = torch::jit::load("./model/traced_curling_cnn_gat2023.pt", device);
+        std::cout << "model loaded" << std::endl;
     }
     catch (const c10::Error& e) {
         std::cerr << "error loading the model\n";
@@ -294,10 +299,13 @@ dc::Move OnMyTurn(dc::GameState const& game_state)
     torch::NoGradGuard no_grad; 
 
     // Create a vector of inputs.
+    std::cout << "evaluate current state\n";
     auto current_outputs = module.forward(GameStateToInput({current_game_state}, g_game_setting)).toTuple();
 
+    std::cout << "policy\n";
     auto policy = F::softmax(current_outputs->elements()[0].toTensor().reshape({1, 18700}).to(torch::kCPU), 1);
 
+    std::cout << "create shot filter\n";
     torch::Tensor filt = createFilter(current_game_state, g_game_setting);
 
 
@@ -318,6 +326,7 @@ dc::Move OnMyTurn(dc::GameState const& game_state)
 
         return shots[i];
     } else {
+        std::cout << "sort shot index\n";
 
         // int idx = torch::argmax(policy[0]).item().to<int>();
         // int idx = torch::argmax(torch::rand({2, 50, 187})).item().to<int>();
@@ -327,6 +336,7 @@ dc::Move OnMyTurn(dc::GameState const& game_state)
         // std::cout << idx << std::endl;
 
 
+        std::cout << "convert index to shot\n";
 
         #pragma omp parallel for
         for (auto i = 0; i < nCandidate; ++i) {   
@@ -347,11 +357,14 @@ dc::Move OnMyTurn(dc::GameState const& game_state)
         temp_game_states.resize(nBatchSize);
         std::array<dc::Move, nBatchSize> temp_moves;
 
+        std::cout << "prepare value tensor\n";
         torch::Tensor prob_ave = torch::zeros({nCandidate});
 
         int count = 0;
         auto now = std::chrono::system_clock::now();
         while ((count < nCandidate * nSimulation) && (now - start < limit)){
+            std::cout << "shot simulation\n";
+
             #pragma omp parallel for
             for (auto i = 0; i < nBatchSize; ++i) {
                 temp_game_states[i] = current_game_state;
@@ -362,13 +375,16 @@ dc::Move OnMyTurn(dc::GameState const& game_state)
                     current_player, temp_game_states[i], temp_moves[i], std::chrono::milliseconds(0));
             }
 
+            std::cout << "evaluate simulation results\n";
             // auto inputs = GameStateToInput(temp_game_states, g_game_setting);
             auto outputs = module.forward(GameStateToInput(temp_game_states, g_game_setting)).toTuple();
 
+            std::cout << "value\n";
             torch::Tensor prob = torch::sigmoid(outputs->elements()[1].toTensor().to(torch::kCPU));
 
             // std::cout << inputs[1] << inputs[2] << inputs[3] << std::endl;
 
+            std::cout << "flip value if hammer\n";
             if (g_team != current_game_state.hammer) prob = torch::ones({prob.sizes()[0], 1})-prob;
 
             if (current_game_state.shot+1 == current_game_state.kShotPerEnd){
@@ -383,6 +399,7 @@ dc::Move OnMyTurn(dc::GameState const& game_state)
                 }
             }
 
+            std::cout << "mean value\n";
             for (auto i=0; i < nBatchSize / nSimulation; ++i){
                 prob_ave[count/nSimulation+i] = torch::mean(prob.reshape({nBatchSize / nSimulation, nSimulation}), 1)[i];
             }
@@ -397,6 +414,8 @@ dc::Move OnMyTurn(dc::GameState const& game_state)
         // for (auto i=0; i < 8; ++i){
         //     std::cout << indices[0][i].item() << "   " << prob_ave[i].item<float>() << std::endl;
         // }
+
+        std::cout << "return shot\n";
 
         return shots[torch::argmax(prob_ave).item().to<int>()];
     }
