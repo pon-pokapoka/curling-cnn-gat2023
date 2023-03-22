@@ -1,3 +1,5 @@
+[README（日本語）](https://github.com/pon-pokapoka/curling-cnn-gat2023/blob/main/README_ja.md)
+
 # CurlingCNN: CNN based curling AI
 CurlingCNN is a CNN based curling AI that won the 9th UEC-cup Digital Curling Tournament in GAT2023
 
