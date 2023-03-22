@@ -1,4 +1,4 @@
-# Curling CNN
+# CurlingCNN
 CurlingCNNは、GAT2023の第9回UEC-cupデジタルカーリング大会で優勝した、CNNを使ったカーリングAIです
 
 トーナメントのホームページ:
@@ -57,10 +57,10 @@ CurlingCNNは、現在の状態からショット候補（速度、角度、回�
 ショット候補のシミュレーションの結果、最も勝率が高くなるショットを選択します。
 CurlingCNNは深さ1の探索木を用いています。
 
-## 著者
+## 製作者
 吉岡岳洋
 - [@pon_pokapoka](https://twitter.com/pon_pokapoka)
 
 
-# ライセンス
+## ライセンス
 このプロジェクトは、MITライセンスに準拠します。
