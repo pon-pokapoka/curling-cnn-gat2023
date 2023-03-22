@@ -14,6 +14,7 @@ The CNN is trained with the game statistics from World Curling Championships and
 This program is inspired by AlphaGo Zero and dlshogi.
 
 ## Requirements
+Checked on Ubuntu and Windows.
 - g++
 - cmake
 - boost
